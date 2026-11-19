@@ -54,10 +54,26 @@ RESID_FLOOR = 0.15      # minimum per-trophy residual sd
 RESID_CAP = 1.0         # maximum per-trophy residual sd
 SHRINK_K = 3.0          # prior strength (in distinct reads) for slope shrinkage
 SLOPE_MIN = -1.0        # clamp on shrunk slopes
-SLOPE_MAX = 5.0
+SLOPE_MAX = 3.0         # ... and on the upside. Guard against explosive
+# extrapolation over the final's long horizon: x_target - x_last is about
+# ln(169) - ln(60.5) = 1.03 there, so a slope of 5 would move the centre
+# +5.1 logit (a trophy at 1% forecast at ~62% in 4.5 days -- implausible:
+# the player base broadens with slower players, it does not all earn a
+# trophy almost nobody had). Slope 3 still allows +3.1 logit (1% -> ~18%),
+# generous for a mid-story trophy, but no longer lets a noisy steep fit
+# dominate the forecast. Typical fitted/shrunk slopes sit well below 3,
+# so this binds only on extreme extrapolations.
 FLAT_N_GROWTH = 6.0     # expected tracked-player multiplier at the next refresh
 FLAT_GROWTH_K = 1.0
-FLAT_SD = 0.5
+FLAT_SD = 0.75         # logit sd on a flat-history (dilution-shock) forecast.
+# Calibration: the one observed refresh multiplied players 6.06x, but the next
+# refresh's multiplier is unobserved (plausibly ~3x-12x, +/-0.7 in logit) and
+# the new cohort's earn rate per trophy is unobserved too (+/-0.5 in logit),
+# so the honest sd is ~0.75, not 0.5: at 0.5 the 90% band spans only a
+# 0.44x-2.3x rate ratio around the median, narrower than the plausible
+# multiplier range alone. Pinball loss charges 1.9 per logit outside the
+# 90% band but only 0.1 per logit inside it, so the wider band is cheap
+# insurance against a shock whose size is genuinely unknown.
 FLAT_HORIZON_MIN = 720  # flat-history rule only for horizons up to 12 h
 TWO_POINT_SHRINK = 0.70  # fraction of slope borrowed from the tier (2 points)
 TWO_POINT_SD = 0.55
